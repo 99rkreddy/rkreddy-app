@@ -899,22 +899,22 @@
             }
             
             .stat-card {
-                padding: 12px;
-                border-radius: 14px;
-                min-height: 100px;
+                padding: 10px;
+                border-radius: 12px;
+                min-height: 90px;
             }
             
             .stat-label {
-                font-size: 8px;
-                margin-bottom: 8px;
+                font-size: 7px;
+                margin-bottom: 6px;
             }
             
             .stat-value {
-                font-size: 24px;
+                font-size: 20px;
             }
             
             .stat-change {
-                font-size: 8px;
+                font-size: 7px;
             }
 
             .board-container {
@@ -1160,35 +1160,21 @@
             <div class="login-logo">RkReddy Studio</div>
             <p class="login-subtitle">Content Pipeline & Growth Tracker</p>
             
-            <div style="text-align: center; margin: 32px 0;">
-                <button id="googleSignInBtn" class="btn" style="
-                    background: white;
-                    color: #444;
-                    padding: 14px 24px;
-                    font-size: 16px;
-                    font-weight: 600;
-                    border: 1px solid #ddd;
-                    cursor: pointer;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 12px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    border-radius: 4px;
-                    transition: all 0.2s ease;
-                ">
-                    <svg width="18" height="18" viewBox="0 0 18 18">
-                        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
-                        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
-                        <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
-                        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
-                    </svg>
-                    Sign in with Google
-                </button>
-            </div>
+            <form id="loginForm" style="margin-top: 32px;">
+                <div class="form-group">
+                    <label class="form-label">Select User</label>
+                    <select class="form-select" id="userSelect" required>
+                        <option value="">Choose your role...</option>
+                        <option value="admin">RkReddy (Admin)</option>
+                        <option value="jeb">Jeb (Editor)</option>
+                        <option value="varthika">Varthika (Publisher)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Access Workspace</button>
+            </form>
             
-            <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 24px; line-height: 1.6;">
-                <p>🔒 Secure authentication powered by Firebase</p>
-                <p style="margin-top: 8px;">Only authorized team members can access</p>
+            <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 24px;">
+                <p>🎬 RkReddy Studio v1.0</p>
             </div>
         </div>
     </div>
@@ -1634,6 +1620,40 @@
         </div>
     </div>
 
+    <!-- Platform Edit Modal -->
+    <div class="modal-overlay" id="platformEditModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="platformEditTitle">Edit Platform</h2>
+            </div>
+            <form id="platformEditForm" style="padding: 24px;">
+                <input type="hidden" id="editPlatformIndex">
+                
+                <div class="form-group">
+                    <label class="form-label">Platform Name</label>
+                    <input type="text" class="form-input" id="editPlatformName" readonly style="background: var(--bg-tertiary); cursor: not-allowed;">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Current Count</label>
+                    <input type="number" class="form-input" id="editCurrentCount" required min="0">
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Enter your current subscriber/follower count</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Goal</label>
+                    <input type="number" class="form-input" id="editGoalCount" required min="0">
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Set your target goal</p>
+                </div>
+                
+                <div class="modal-footer" style="padding: 0; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closePlatformEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Mobile Toggle -->
     <button class="mobile-toggle" id="mobileToggle" onclick="toggleMobileSidebar()">☰</button>
 
@@ -1679,100 +1699,59 @@
             'varthika@gmail.com': 'varthika'   // ⚠️ REPLACE with Varthika's actual Gmail
         };
         
-        // Google Sign-In
+        // Simple Login (Firebase removed for now)
         document.addEventListener('DOMContentLoaded', function() {
-            const signInBtn = document.getElementById('googleSignInBtn');
+            const loginForm = document.getElementById('loginForm');
             
-            if (!signInBtn) {
-                console.error('Google Sign-In button not found!');
-                return;
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const selectedUser = document.getElementById('userSelect').value;
+                    
+                    if (!selectedUser) {
+                        alert('Please select a user');
+                        return;
+                    }
+                    
+                    currentUser = selectedUser;
+                    localStorage.setItem('currentUser', currentUser);
+                    
+                    initApp();
+                });
             }
             
-            console.log('✅ Google Sign-In button found and ready');
-            
-            signInBtn.addEventListener('click', function() {
-                console.log('🔵 Sign-in button clicked');
-                
-                if (!auth) {
-                    console.error('❌ Auth not initialized!');
-                    alert('Firebase Authentication is not ready. Please refresh the page.');
-                    return;
-                }
-                
-                try {
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    console.log('🔵 Provider created');
-                    
-                    console.log('🔵 Starting Google sign-in popup...');
-                    
-                    auth.signInWithPopup(provider)
-                        .then((result) => {
-                            console.log('✅ Sign-in successful!', result.user.email);
-                            
-                            const user = result.user;
-                            const email = user.email;
-                            
-                            // Check if user is authorized
-                            if (authorizedUsers[email]) {
-                                console.log('✅ User authorized as:', authorizedUsers[email]);
-                                currentUser = authorizedUsers[email];
-                                localStorage.setItem('currentUser', currentUser);
-                                initializeApp(user);
-                            } else {
-                                console.log('❌ User not authorized:', email);
-                                alert('❌ Access Denied\n\nYour email is not authorized to access this app.\n\nContact RkReddy to get access.');
-                                auth.signOut();
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('❌ Sign-in error:', error);
-                            console.error('Error code:', error.code);
-                            console.error('Error message:', error.message);
-                            
-                            if (error.code === 'auth/popup-blocked') {
-                                alert('❌ Popup blocked!\n\nPlease allow popups for this site and try again.');
-                            } else if (error.code === 'auth/unauthorized-domain') {
-                                alert('❌ Domain not authorized!\n\nPlease add this domain to Firebase authorized domains.');
-                            } else {
-                                alert('Sign-in failed: ' + error.message);
-                            }
-                        });
-                } catch (error) {
-                    console.error('❌ Exception in sign-in:', error);
-                    alert('Error: ' + error.message);
-                }
-            });
-        });
-        
-        // Check if user is already signed in
-        auth.onAuthStateChanged((user) => {
-            if (user && authorizedUsers[user.email]) {
-                currentUser = authorizedUsers[user.email];
-                localStorage.setItem('currentUser', currentUser);
-                initializeApp(user);
+            // Check if user already logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = savedUser;
+                initApp();
             }
         });
         
-        // Initialize app after successful login
-        function initializeApp(user) {
+        // Initialize app after login
+        function initApp() {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('appContainer').style.display = 'flex';
             
             // Update user info in sidebar
-            const displayName = user.displayName || user.email.split('@')[0];
-            document.getElementById('currentUser').textContent = displayName;
+            const userName = currentUser === 'admin' ? 'RkReddy' : 
+                           currentUser === 'jeb' ? 'Jeb' : 'Varthika';
+            const userRole = currentUser === 'admin' ? 'ADMIN' : 
+                           currentUser === 'jeb' ? 'EDITOR' : 'PUBLISHER';
             
-            const badge = document.getElementById('userBadge');
-            badge.textContent = currentUser === 'admin' ? 'ADMIN' : 
-                               currentUser === 'jeb' ? 'EDITOR' : 'PUBLISHER';
+            document.getElementById('currentUser').textContent = userName;
+            document.getElementById('userBadge').textContent = userRole;
             
             // Show/hide admin-only sections
             document.querySelectorAll('.admin-only').forEach(el => {
                 el.style.display = currentUser === 'admin' ? 'block' : 'none';
             });
             
-            // Load data and render
-            loadDataFromFirebase();
+            // Load sample data
+            tasks = sampleTasks;
+            
+            // Render all sections
             renderDashboard();
             renderTasks();
             renderBoard();
@@ -1784,24 +1763,6 @@
             // Start YouTube subscriber auto-update
             startYouTubeAutoUpdate();
         }
-        
-        // Load data from Firebase
-        function loadDataFromFirebase() {
-            database.ref('tasks').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    tasks = Object.values(data);
-                    renderDashboard();
-                    renderTasks();
-                    renderBoard();
-                    renderCalendar();
-                }
-            });
-            
-            database.ref('expenses').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    expenses = Object.values(data);
                     renderExpenses();
                 }
             });
@@ -2014,6 +1975,29 @@
                 color: '#1877F2'
             }
         ];
+        
+        // Load saved platform data from localStorage
+        (function loadSavedPlatforms() {
+            const saved = localStorage.getItem('platforms');
+            if (saved) {
+                try {
+                    const savedPlatforms = JSON.parse(saved);
+                    // Merge saved data with defaults (in case new platforms were added)
+                    savedPlatforms.forEach((savedPlatform, index) => {
+                        if (platforms[index]) {
+                            platforms[index].current = savedPlatform.current;
+                            platforms[index].goal = savedPlatform.goal;
+                            if (savedPlatform.lastUpdated) {
+                                platforms[index].lastUpdated = new Date(savedPlatform.lastUpdated);
+                            }
+                        }
+                    });
+                    console.log('✅ Loaded saved platform data');
+                } catch (e) {
+                    console.error('Error loading saved platforms:', e);
+                }
+            }
+        })();
 
         // Sample tasks
         const sampleTasks = [
@@ -2856,24 +2840,109 @@
                 closeTaskDetail();
             }
         }
+        
+        // Platform Edit Functions
+        function openPlatformEditModal(platformIndex) {
+            const platform = platforms[platformIndex];
+            
+            document.getElementById('editPlatformIndex').value = platformIndex;
+            document.getElementById('platformEditTitle').textContent = `Edit ${platform.name}`;
+            document.getElementById('editPlatformName').value = platform.name;
+            document.getElementById('editCurrentCount').value = platform.current;
+            document.getElementById('editGoalCount').value = platform.goal;
+            
+            document.getElementById('platformEditModal').classList.add('active');
+        }
+        
+        function closePlatformEditModal() {
+            document.getElementById('platformEditModal').classList.remove('active');
+            document.getElementById('platformEditForm').reset();
+        }
+        
+        // Handle platform edit form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const platformEditForm = document.getElementById('platformEditForm');
+            if (platformEditForm) {
+                platformEditForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const index = parseInt(document.getElementById('editPlatformIndex').value);
+                    const newCurrent = parseInt(document.getElementById('editCurrentCount').value);
+                    const newGoal = parseInt(document.getElementById('editGoalCount').value);
+                    
+                    if (newCurrent < 0 || newGoal < 0) {
+                        alert('❌ Values must be positive numbers');
+                        return;
+                    }
+                    
+                    if (newGoal <= newCurrent) {
+                        if (!confirm('⚠️ Your goal is less than or equal to current count. Continue?')) {
+                            return;
+                        }
+                    }
+                    
+                    // Update platform data
+                    platforms[index].current = newCurrent;
+                    platforms[index].goal = newGoal;
+                    platforms[index].lastUpdated = new Date();
+                    
+                    // Save to localStorage
+                    localStorage.setItem('platforms', JSON.stringify(platforms));
+                    
+                    // Re-render
+                    renderGrowth();
+                    renderDashboard();
+                    
+                    // Close modal
+                    closePlatformEditModal();
+                    
+                    // Show success message
+                    const platformName = platforms[index].name;
+                    console.log(`✅ Updated ${platformName}: Current=${newCurrent.toLocaleString()}, Goal=${newGoal.toLocaleString()}`);
+                });
+            }
+        });
 
         // Growth
         function renderGrowth() {
             const grid = document.getElementById('platformGrid');
             grid.innerHTML = '';
             
-            platforms.forEach(platform => {
+            platforms.forEach((platform, index) => {
                 const card = document.createElement('div');
                 card.className = 'platform-card';
                 
                 // Make card clickable if URL exists
                 if (platform.url) {
                     card.style.cursor = 'pointer';
-                    card.onclick = () => window.open(platform.url, '_blank');
+                    card.onclick = (e) => {
+                        // Don't open URL if clicking edit button
+                        if (!e.target.closest('.edit-btn')) {
+                            window.open(platform.url, '_blank');
+                        }
+                    };
                 }
+                
+                // Long-press to edit on mobile
+                let pressTimer;
+                card.addEventListener('touchstart', function(e) {
+                    if (e.target.closest('.edit-btn')) return;
+                    pressTimer = setTimeout(() => {
+                        openPlatformEditModal(index);
+                    }, 800); // 800ms long press
+                });
+                
+                card.addEventListener('touchend', function() {
+                    clearTimeout(pressTimer);
+                });
+                
+                card.addEventListener('touchmove', function() {
+                    clearTimeout(pressTimer);
+                });
                 
                 const header = document.createElement('div');
                 header.className = 'platform-header';
+                header.style.position = 'relative';
                 
                 const icon = document.createElement('div');
                 icon.className = 'platform-icon';
@@ -2884,8 +2953,37 @@
                 name.className = 'platform-name';
                 name.textContent = platform.name;
                 
+                // Add edit button
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-btn';
+                editBtn.innerHTML = '✏️';
+                editBtn.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    background: rgba(255, 107, 53, 0.1);
+                    border: 1px solid var(--accent-primary);
+                    color: var(--accent-primary);
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+                `;
+                editBtn.onmouseover = () => editBtn.style.background = 'var(--accent-primary)';
+                editBtn.onmouseout = () => editBtn.style.background = 'rgba(255, 107, 53, 0.1)';
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openPlatformEditModal(index);
+                };
+                
                 header.appendChild(icon);
                 header.appendChild(name);
+                header.appendChild(editBtn);
                 
                 const stats = document.createElement('div');
                 stats.className = 'platform-stats';
@@ -3202,7 +3300,7 @@
             lastTouchEnd = now;
         }, false);
         
-        // Swipe right from left edge to open sidebar (iOS-style)
+        // Swipe right from left edge - Smart behavior
         let swipeStartX = 0;
         let swipeStartY = 0;
         let isSwipingRight = false;
@@ -3251,9 +3349,18 @@
                 const currentX = e.changedTouches[0].clientX;
                 const diffX = currentX - swipeStartX;
                 
-                // If swiped more than 80px right from left edge, open sidebar
+                // If swiped more than 80px right from left edge
                 if (diffX > 80) {
-                    toggleMobileSidebar();
+                    // Check which page we're on
+                    const activePage = document.querySelector('.page.active');
+                    
+                    if (activePage && activePage.id === 'dashboard') {
+                        // On dashboard → Open sidebar
+                        toggleMobileSidebar();
+                    } else {
+                        // On any other page → Go to dashboard
+                        goToDashboard();
+                    }
                 }
             }
             isSwipingRight = false;
