@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>RkReddy Studio | Content Pipeline</title>
     
     <!-- iOS PWA Support -->
@@ -50,6 +50,21 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             overflow-x: hidden;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: pan-y;
+        }
+        
+        /* Allow text selection only in input fields */
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        
+        /* Prevent double-tap zoom on iOS */
+        * {
+            touch-action: manipulation;
         }
 
         .app-container {
@@ -68,6 +83,8 @@
             height: 100vh;
             z-index: 100;
             transition: transform 0.3s ease;
+            top: 0;
+            left: 0;
         }
 
         .sidebar.mobile-hidden {
@@ -77,6 +94,7 @@
         .sidebar-header {
             padding: 24px 20px;
             border-bottom: 1px solid var(--border);
+            padding-top: max(24px, env(safe-area-inset-top));
         }
 
         .logo {
@@ -207,12 +225,16 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             padding-left: 100px;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .page-subtitle {
             color: var(--text-secondary);
             font-size: 14px;
             padding-left: 100px;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         /* Cards */
@@ -353,7 +375,32 @@
 
         @media (max-width: 768px) {
             .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            
+            .stat-card {
+                padding: 12px;
+                border-radius: 14px;
+            }
+            
+            .stat-label {
+                font-size: 8px;
+            }
+            
+            .stat-value {
+                font-size: 24px;
+            }
+            
+            .stat-change {
+                font-size: 8px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
             }
         }
 
@@ -837,6 +884,40 @@
                 margin-bottom: 16px;
                 width: fit-content;
             }
+            
+            /* Calendar mobile fixes */
+            .calendar-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+            
+            .calendar-month {
+                font-size: 16px;
+                text-align: center;
+            }
+            
+            .calendar-nav {
+                justify-content: center;
+            }
+            
+            .calendar-day {
+                padding: 4px;
+                font-size: 12px;
+            }
+            
+            .calendar-day-number {
+                font-size: 12px;
+            }
+            
+            .calendar-day-header {
+                font-size: 9px;
+                padding: 6px 2px;
+            }
+            
+            .calendar-legend {
+                padding: 12px !important;
+            }
         }
 
         /* Growth Platform Cards */
@@ -1284,7 +1365,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Deadline</label>
-                    <input type="date" class="form-input" id="taskDeadline">
+                    <input type="datetime-local" class="form-input" id="taskDeadline">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Notes</label>
@@ -1804,7 +1885,15 @@
             
             const deadline = document.createElement('span');
             if (task.deadline) {
-                deadline.textContent = new Date(task.deadline).toLocaleDateString();
+                const deadlineDate = new Date(task.deadline);
+                const timeStr = deadlineDate.toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                deadline.textContent = timeStr;
             }
             
             meta.appendChild(priority);
@@ -2373,6 +2462,56 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.remove('mobile-visible');
         }
+        
+        // Swipe to close sidebar
+        let sidebarStartX = 0;
+        let sidebarCurrentX = 0;
+        let isSidebarSwiping = false;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            
+            sidebar.addEventListener('touchstart', function(e) {
+                sidebarStartX = e.touches[0].clientX;
+                sidebarCurrentX = sidebarStartX;
+                isSidebarSwiping = false;
+            });
+            
+            sidebar.addEventListener('touchmove', function(e) {
+                if (!sidebar.classList.contains('mobile-visible')) return;
+                
+                sidebarCurrentX = e.touches[0].clientX;
+                const diffX = sidebarCurrentX - sidebarStartX;
+                
+                // Swiping left (closing direction)
+                if (diffX < -10) {
+                    isSidebarSwiping = true;
+                    e.preventDefault();
+                    
+                    // Apply transform to follow finger
+                    if (diffX < 0) {
+                        sidebar.style.transform = `translateX(${diffX}px)`;
+                    }
+                }
+            });
+            
+            sidebar.addEventListener('touchend', function(e) {
+                if (!isSidebarSwiping) return;
+                
+                const diffX = sidebarCurrentX - sidebarStartX;
+                
+                // If swiped more than 100px to the left, close it
+                if (diffX < -100) {
+                    closeMobileSidebar();
+                    sidebar.style.transform = '';
+                } else {
+                    // Snap back to open position
+                    sidebar.style.transform = '';
+                }
+                
+                isSidebarSwiping = false;
+            });
+        });
         
         // Close sidebar when clicking outside of it
         document.addEventListener('click', function(e) {
