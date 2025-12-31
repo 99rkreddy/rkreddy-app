@@ -331,8 +331,13 @@
         }
 
         .stat-card:hover {
-            transform: scale(1.02);
+            transform: scale(1.05);
             border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+        
+        .stat-card:active {
+            transform: scale(0.98);
         }
 
         .stat-card::before {
@@ -883,20 +888,22 @@
             }
             
             .stat-card {
-                padding: 10px;
-                border-radius: 12px;
+                padding: 12px;
+                border-radius: 14px;
+                min-height: 100px;
             }
             
             .stat-label {
-                font-size: 7px;
+                font-size: 8px;
+                margin-bottom: 8px;
             }
             
             .stat-value {
-                font-size: 20px;
+                font-size: 24px;
             }
             
             .stat-change {
-                font-size: 7px;
+                font-size: 8px;
             }
 
             .board-container {
@@ -1094,6 +1101,45 @@
             gap: 8px;
             flex-wrap: wrap;
         }
+        
+        /* Task Detail View */
+        .task-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .task-detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .task-detail-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .task-detail-value {
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 500;
+            text-align: right;
+            flex: 1;
+            margin-left: 20px;
+        }
+        
+        .task-detail-notes {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -1173,22 +1219,22 @@
                 </div>
 
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card" style="cursor: pointer;" onclick="showPage('tasks')">
                         <div class="stat-label">📝 Pending</div>
                         <div class="stat-value" id="dashPendingTasks">0</div>
                         <div class="stat-change">Tasks to do</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="cursor: pointer;" onclick="showPage('tasks')">
                         <div class="stat-label">⚡ Active</div>
                         <div class="stat-value" id="dashInProgress">0</div>
                         <div class="stat-change">In progress</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="cursor: pointer;" onclick="showPage('tasks')">
                         <div class="stat-label">✅ Done</div>
                         <div class="stat-value" id="dashCompleted">0</div>
                         <div class="stat-change positive">Completed</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="cursor: pointer;" onclick="showPage('board')">
                         <div class="stat-label">🎬 Uploads</div>
                         <div class="stat-value" id="dashUploads">0</div>
                         <div class="stat-change">This week</div>
@@ -1204,9 +1250,9 @@
                 </div>
 
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header" style="cursor: pointer;" onclick="showPage('tasks')">
                         <h2 class="card-title">Your Tasks Today</h2>
-                        <button class="btn btn-primary" onclick="showTaskModal()">+ New Task</button>
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); showTaskModal()">+ New Task</button>
                     </div>
                     <div class="task-list" id="dashboardTaskList"></div>
                 </div>
@@ -1542,6 +1588,22 @@
         </div>
     </div>
 
+    <!-- Task Detail Modal -->
+    <div class="modal-overlay" id="taskDetailModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Task Details</h2>
+            </div>
+            <div id="taskDetailContent" style="padding: 24px;">
+                <!-- Task details will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeTaskDetail()">Close</button>
+                <button type="button" class="btn btn-primary" id="taskDetailCompleteBtn" onclick="completeTaskFromDetail()">Mark Complete</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Toggle -->
     <button class="mobile-toggle" id="mobileToggle" onclick="toggleMobileSidebar()">☰</button>
 
@@ -1819,6 +1881,25 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('dashboard').classList.add('active');
         }
+        
+        function showPage(pageName) {
+            // Update active nav
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const navItem = document.querySelector(`.nav-item[data-page="${pageName}"]`);
+            if (navItem) {
+                navItem.classList.add('active');
+            }
+            
+            // Show page
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const pageElement = document.getElementById(pageName);
+            if (pageElement) {
+                pageElement.classList.add('active');
+            }
+            
+            // Close mobile sidebar
+            closeMobileSidebar();
+        }
 
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function() {
@@ -1861,6 +1942,8 @@
             platforms.slice(0, 4).forEach(platform => {
                 const card = document.createElement('div');
                 card.className = 'stat-card';
+                card.style.cursor = 'pointer';
+                card.onclick = () => showPage('growth');
                 
                 const percentage = Math.round((platform.current / platform.goal) * 100);
                 
@@ -1970,8 +2053,12 @@
                 clickCount++;
                 if (clickCount === 1) {
                     clickTimer = setTimeout(() => {
+                        // Single click - open task detail
+                        if (clickCount === 1) {
+                            openTaskDetail(task);
+                        }
                         clickCount = 0;
-                    }, 400);
+                    }, 300);
                 } else if (clickCount === 2) {
                     clearTimeout(clickTimer);
                     clickCount = 0;
@@ -2491,6 +2578,131 @@
         function closeDayView() {
             document.getElementById('dayViewModal').classList.remove('active');
         }
+        
+        // Task Detail View
+        let currentDetailTask = null;
+        
+        function openTaskDetail(task) {
+            currentDetailTask = task;
+            const modal = document.getElementById('taskDetailModal');
+            const content = document.getElementById('taskDetailContent');
+            
+            // Platform names mapping
+            const platformNames = {
+                'rkreddy-yt': 'RkReddy YT',
+                '2.0-yt': '2.0 YT',
+                'life-of-rk-yt': 'Life of Rk YT',
+                'instagram': 'Instagram',
+                'facebook': 'Facebook',
+                'tiktok': 'TikTok'
+            };
+            
+            // Status names
+            const statusNames = {
+                'todo': 'To Do',
+                'progress': 'In Progress',
+                'done': 'Completed'
+            };
+            
+            // Assignee name
+            const assigneeName = task.assignee === 'admin' ? 'RkReddy (Admin)' : 
+                                 task.assignee === 'jeb' ? 'Jeb (Editor)' : 
+                                 'Varthika (Publisher)';
+            
+            // Format deadline
+            const deadlineStr = task.deadline ? 
+                new Date(task.deadline).toLocaleString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true 
+                }) : 'No deadline';
+            
+            // Build HTML
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 24px; color: var(--text-primary);">${task.name}</h3>
+                </div>
+                
+                <div class="task-detail-row">
+                    <div class="task-detail-label">Status</div>
+                    <div class="task-detail-value">
+                        <span class="task-priority priority-${task.status === 'done' ? 'low' : task.status === 'progress' ? 'medium' : 'high'}" style="background: ${task.status === 'done' ? 'var(--success)' : task.status === 'progress' ? 'var(--warning)' : 'var(--text-muted)'}; padding: 4px 12px; border-radius: 4px; font-size: 12px;">
+                            ${statusNames[task.status]}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="task-detail-row">
+                    <div class="task-detail-label">Priority</div>
+                    <div class="task-detail-value">
+                        <span class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</span>
+                    </div>
+                </div>
+                
+                <div class="task-detail-row">
+                    <div class="task-detail-label">Assigned To</div>
+                    <div class="task-detail-value">${assigneeName}</div>
+                </div>
+            `;
+            
+            if (task.platform) {
+                html += `
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">Platform</div>
+                        <div class="task-detail-value">
+                            <span style="background: rgba(157, 78, 221, 0.2); color: var(--accent-purple); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                                ${platformNames[task.platform] || task.platform}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="task-detail-row">
+                    <div class="task-detail-label">Deadline</div>
+                    <div class="task-detail-value">${deadlineStr}</div>
+                </div>
+            `;
+            
+            if (task.notes) {
+                html += `
+                    <div style="margin-top: 24px;">
+                        <div class="task-detail-label" style="margin-bottom: 12px;">Notes</div>
+                        <div class="task-detail-notes">${task.notes}</div>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = html;
+            
+            // Update complete button
+            const completeBtn = document.getElementById('taskDetailCompleteBtn');
+            if (task.status === 'done') {
+                completeBtn.textContent = 'Mark Incomplete';
+                completeBtn.style.background = 'var(--text-muted)';
+            } else {
+                completeBtn.textContent = 'Mark Complete';
+                completeBtn.style.background = 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))';
+            }
+            
+            modal.classList.add('active');
+        }
+        
+        function closeTaskDetail() {
+            document.getElementById('taskDetailModal').classList.remove('active');
+            currentDetailTask = null;
+        }
+        
+        function completeTaskFromDetail() {
+            if (currentDetailTask) {
+                toggleTask(currentDetailTask.id);
+                closeTaskDetail();
+            }
+        }
 
         // Growth
         function renderGrowth() {
@@ -2837,20 +3049,32 @@
             lastTouchEnd = now;
         }, false);
         
-        // Swipe right to go back to dashboard (iOS-style back gesture)
+        // Swipe right from left edge to open sidebar (iOS-style)
         let swipeStartX = 0;
         let swipeStartY = 0;
-        let isSwipingBack = false;
+        let isSwipingRight = false;
         
         document.addEventListener('touchstart', function(e) {
+            // Don't interfere if sidebar is already open
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.classList.contains('mobile-visible')) {
+                return;
+            }
+            
             swipeStartX = e.touches[0].clientX;
             swipeStartY = e.touches[0].clientY;
-            isSwipingBack = false;
+            isSwipingRight = false;
         });
         
         document.addEventListener('touchmove', function(e) {
-            // Only trigger if starting from left edge (first 50px)
-            if (swipeStartX > 50) return;
+            // Don't interfere if sidebar is already open
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.classList.contains('mobile-visible')) {
+                return;
+            }
+            
+            // Only trigger if starting from left edge (first 30px)
+            if (swipeStartX > 30) return;
             
             const currentX = e.touches[0].clientX;
             const currentY = e.touches[0].clientY;
@@ -2858,22 +3082,28 @@
             const diffY = Math.abs(currentY - swipeStartY);
             
             // Swipe right from left edge (and more horizontal than vertical)
-            if (diffX > 30 && diffX > diffY) {
-                isSwipingBack = true;
+            if (diffX > 20 && diffX > diffY) {
+                isSwipingRight = true;
             }
         });
         
         document.addEventListener('touchend', function(e) {
-            if (isSwipingBack) {
+            // Don't interfere if sidebar is already open
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.classList.contains('mobile-visible')) {
+                return;
+            }
+            
+            if (isSwipingRight) {
                 const currentX = e.changedTouches[0].clientX;
                 const diffX = currentX - swipeStartX;
                 
-                // If swiped more than 100px right, go to dashboard
-                if (diffX > 100) {
-                    goToDashboard();
+                // If swiped more than 80px right from left edge, open sidebar
+                if (diffX > 80) {
+                    toggleMobileSidebar();
                 }
             }
-            isSwipingBack = false;
+            isSwipingRight = false;
         });
     </script>
 </body>
