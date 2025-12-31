@@ -1,0 +1,2387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RkReddy Studio | Content Pipeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #13131a;
+            --bg-tertiary: #1a1a24;
+            --accent-primary: #ff6b35;
+            --accent-secondary: #f7931e;
+            --accent-purple: #9d4edd;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6b6b7a;
+            --border: #2a2a35;
+            --success: #06d6a0;
+            --warning: #ffd166;
+            --error: #ef476f;
+            
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.mobile-hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'DM Serif Display', serif;
+            font-size: 24px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+
+        .user-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .user-badge {
+            background: var(--accent-primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(255, 107, 53, 0.1), transparent);
+            color: var(--accent-primary);
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+            max-width: 1600px;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .page-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 36px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            padding-left: 100px;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding-left: 100px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-primary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 14px;
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.02);
+            border-color: var(--accent-primary);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+            width: 100%;
+            line-height: 1.2;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-top: auto;
+            margin-bottom: 2px;
+        }
+
+        .stat-change {
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            color: var(--text-muted);
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-icon {
+            font-size: 20px;
+            margin-bottom: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Task List */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: visible;
+        }
+
+        .task-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: transform 0.3s ease, opacity 0.3s ease, background 0.2s ease, border-color 0.2s ease;
+            position: relative;
+            user-select: none;
+            touch-action: pan-y;
+        }
+
+        .task-item:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .task-item.swiping-left {
+            background: rgba(239, 71, 111, 0.2);
+            border-color: var(--error);
+        }
+
+        .task-item.deleting {
+            transform: translateX(-100vw);
+            opacity: 0;
+        }
+
+        .task-delete-hover-btn {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .task-item:hover .task-delete-hover-btn {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .task-delete-hover-btn:hover {
+            background: #d63f5f;
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .task-delete-hover-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        @media (hover: none) {
+            .task-delete-hover-btn {
+                display: none;
+            }
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .task-checkbox.checked {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .task-details {
+            flex: 1;
+        }
+
+        .task-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .task-priority {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .priority-high {
+            background: rgba(239, 71, 111, 0.2);
+            color: var(--error);
+        }
+
+        .priority-medium {
+            background: rgba(255, 209, 102, 0.2);
+            color: var(--warning);
+        }
+
+        .priority-low {
+            background: rgba(6, 214, 160, 0.2);
+            color: var(--success);
+        }
+
+        /* Kanban Board */
+        .board-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+
+        .board-column {
+            min-width: 300px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .column-title {
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .column-count {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .board-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+
+        .board-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .board-card.dragging {
+            opacity: 0.5;
+        }
+
+        /* Calendar */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .calendar-month {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-tertiary);
+            transform: scale(1.05);
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(247, 147, 30, 0.1));
+            border-color: var(--accent-primary);
+        }
+
+        .calendar-day-number {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .calendar-event-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-bottom: 24px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .progress-value {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Login Page */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+        }
+
+        .login-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 48px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-logo {
+            font-family: 'DM Serif Display', serif;
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            z-index: 200;
+            box-shadow: var(--shadow-lg);
+            color: white;
+            font-size: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-visible {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .board-container {
+                flex-direction: column;
+            }
+
+            .board-column {
+                min-width: 100%;
+            }
+
+            .page-title,
+            .page-subtitle {
+                padding-left: 0;
+                margin-top: 40px;
+            }
+
+            .back-button {
+                position: static;
+                margin-bottom: 16px;
+                width: fit-content;
+            }
+        }
+
+        /* Growth Platform Cards */
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .platform-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .platform-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-purple));
+        }
+
+        .platform-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .platform-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .platform-name {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .platform-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .platform-stat {
+            text-align: center;
+        }
+
+        .platform-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .platform-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <div class="login-card">
+            <div class="login-logo">RkReddy Studio</div>
+            <p class="login-subtitle">Content Pipeline & Growth Tracker</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Select User</label>
+                    <select id="userSelect" class="form-select">
+                        <option value="">Choose your account...</option>
+                        <option value="admin">RkReddy (Admin)</option>
+                        <option value="jeb">Jeb (Editor)</option>
+                        <option value="varthika">Varthika (Publisher)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Access Workspace</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="appContainer" class="app-container" style="display: none;">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">RkReddy Studio</div>
+                <div class="user-info">
+                    <span id="currentUser"></span>
+                    <span id="userBadge" class="user-badge"></span>
+                </div>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </div>
+                <div class="nav-item" data-page="tasks">
+                    <span class="nav-icon">✓</span>
+                    Tasks
+                </div>
+                <div class="nav-item" data-page="board">
+                    <span class="nav-icon">📋</span>
+                    Content Board
+                </div>
+                <div class="nav-item" data-page="calendar">
+                    <span class="nav-icon">📅</span>
+                    Calendar
+                </div>
+                <div class="nav-item" data-page="growth">
+                    <span class="nav-icon">📈</span>
+                    Growth Tracker
+                </div>
+                <div class="nav-item admin-only" data-page="expenses" style="display: none;">
+                    <span class="nav-icon">💰</span>
+                    Expenses
+                </div>
+                <div class="nav-item" data-page="settings">
+                    <span class="nav-icon">⚙️</span>
+                    Settings
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <div class="page-header">
+                    <button class="back-button" onclick="goToDashboard()" style="visibility: hidden;">
+                        ← Back
+                    </button>
+                    <h1 class="page-title">Welcome Back</h1>
+                    <p class="page-subtitle">Here's what's happening with your content pipeline</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">📝 Pending</div>
+                        <div class="stat-value" id="dashPendingTasks">0</div>
+                        <div class="stat-change">Tasks to do</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">⚡ Active</div>
+                        <div class="stat-value" id="dashInProgress">0</div>
+                        <div class="stat-change">In progress</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">✅ Done</div>
+                        <div class="stat-value" id="dashCompleted">0</div>
+                        <div class="stat-change positive">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">🎬 Uploads</div>
+                        <div class="stat-value" id="dashUploads">0</div>
+                        <div class="stat-change">This week</div>
+                    </div>
+                </div>
+
+                <div class="page-header" style="margin-top: 40px; margin-bottom: 20px;">
+                    <h2 style="font-family: 'DM Serif Display', serif; font-size: 28px; padding-left: 0;">Growth Progress</h2>
+                </div>
+
+                <div class="stats-grid" id="dashboardGrowthGrid">
+                    <!-- Growth cards will be dynamically inserted here -->
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Your Tasks Today</h2>
+                        <button class="btn btn-primary" onclick="showTaskModal()">+ New Task</button>
+                    </div>
+                    <div class="task-list" id="dashboardTaskList"></div>
+                </div>
+            </div>
+
+            <!-- Tasks Page -->
+            <div id="tasks" class="page">
+                <div class="page-header">
+                    <button class="back-button" onclick="goToDashboard()">
+                        ← Back
+                    </button>
+                    <h1 class="page-title">Task Management</h1>
+                    <p class="page-subtitle">Organize and track all your work</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">All Tasks</h2>
+                        <button class="btn btn-primary" onclick="showTaskModal()">+ Create Task</button>
+                    </div>
+                    <div class="task-list" id="taskList"></div>
+                </div>
+            </div>
+
+            <!-- Board Page -->
+            <div id="board" class="page">
+                <div class="page-header">
+                    <button class="back-button" onclick="goToDashboard()">
+                        ← Back
+                    </button>
+                    <h1 class="page-title">Content Pipeline</h1>
+                    <p class="page-subtitle">Drag and drop to move content through the workflow</p>
+                </div>
+
+                <div class="board-container" id="boardContainer">
+                    <div class="board-column" data-status="idea">
+                        <div class="column-header">
+                            <span class="column-title">💡 Idea</span>
+                            <span class="column-count">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-idea"></div>
+                    </div>
+                    <div class="board-column" data-status="editing">
+                        <div class="column-header">
+                            <span class="column-title">✂️ Editing</span>
+                            <span class="column-count">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-editing"></div>
+                    </div>
+                    <div class="board-column" data-status="uploading">
+                        <div class="column-header">
+                            <span class="column-title">⬆️ Uploading</span>
+                            <span class="column-count">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-uploading"></div>
+                    </div>
+                    <div class="board-column" data-status="dubbing">
+                        <div class="column-header">
+                            <span class="column-title">🎙️ Dubbing & Ads</span>
+                            <span class="column-count">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-dubbing"></div>
+                    </div>
+                    <div class="board-column" data-status="metadata">
+                        <div class="column-header">
+                            <span class="column-title">📝 Metadata</span>
+                            <span class="column-count">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-metadata"></div>
+                    </div>
+                    <div class="board-column" data-status="live">
+                        <div class="column-header">
+                            <span class="column-title">✅ Live</span>
+                            <span class="column-count">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-live"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Page -->
+            <div id="calendar" class="page">
+                <div class="page-header">
+                    <button class="back-button" onclick="goToDashboard()">
+                        ← Back
+                    </button>
+                    <h1 class="page-title">Upload Calendar</h1>
+                    <p class="page-subtitle">Plan and schedule your content uploads</p>
+                </div>
+
+                <div class="card">
+                    <div class="calendar-header">
+                        <div class="calendar-month" id="calendarMonth">January 2025</div>
+                        <div class="calendar-nav">
+                            <button class="btn btn-primary" onclick="showTaskModal()" style="margin-right: 12px;">+ New Task</button>
+                            <button class="btn btn-secondary" onclick="previousMonth()">←</button>
+                            <button class="btn btn-secondary" onclick="nextMonth()">→</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Calendar Legend (visible only for admin) -->
+                    <div id="calendarLegend" class="admin-only" style="display: none; margin-bottom: 20px; padding: 16px; background: var(--bg-tertiary); border-radius: 8px;">
+                        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">Team Legend</div>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-primary);"></div>
+                                <span style="font-size: 13px; color: var(--text-secondary);">RkReddy</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-purple);"></div>
+                                <span style="font-size: 13px; color: var(--text-secondary);">Jeb (Editor)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--success);"></div>
+                                <span style="font-size: 13px; color: var(--text-secondary);">Varthika (Publisher)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+            </div>
+
+            <!-- Growth Page -->
+            <div id="growth" class="page">
+                <div class="page-header">
+                    <button class="back-button" onclick="goToDashboard()">
+                        ← Back
+                    </button>
+                    <h1 class="page-title">Growth Dashboard</h1>
+                    <p class="page-subtitle">Track your social media growth across all platforms</p>
+                </div>
+
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">Update YouTube Subscribers</h2>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">
+                        Enter your current subscriber count from <a href="https://studio.youtube.com/channel/UCurtk6gwUZPnccBndhFPNMQ" target="_blank" style="color: var(--accent-primary);">YouTube Studio</a>
+                    </p>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <input type="number" id="subsCountInput" class="form-input" placeholder="e.g. 285000" style="flex: 1; max-width: 300px;">
+                        <button class="btn btn-primary" onclick="updateSubsCount()">Update Count</button>
+                    </div>
+                </div>
+
+                <div class="platform-grid" id="platformGrid"></div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settings" class="page">
+                <div class="page-header">
+                    <button class="back-button" onclick="goToDashboard()">
+                        ← Back
+                    </button>
+                    <h1 class="page-title">Settings</h1>
+                    <p class="page-subtitle">Manage your account settings</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Change Password</h2>
+                    </div>
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-input" id="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-input" id="newPassword" required minlength="4">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-input" id="confirmPassword" required minlength="4">
+                        </div>
+                        <div id="passwordMessage" style="margin-bottom: 16px; padding: 12px; border-radius: 8px; display: none;"></div>
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Account Information</h2>
+                    </div>
+                    <div style="color: var(--text-secondary); line-height: 1.8;">
+                        <p><strong style="color: var(--text-primary);">Name:</strong> <span id="settingsUserName"></span></p>
+                        <p><strong style="color: var(--text-primary);">Role:</strong> <span id="settingsUserRole"></span></p>
+                        <p><strong style="color: var(--text-primary);">Account Type:</strong> <span id="settingsUserType"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expenses Page (Admin Only) -->
+            <div id="expenses" class="page">
+                <div class="page-header">
+                    <button class="back-button" onclick="goToDashboard()">
+                        ← Back
+                    </button>
+                    <h1 class="page-title">Expense Tracker</h1>
+                    <p class="page-subtitle">Monitor and manage business expenses</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">This Month</div>
+                        <div class="stat-value" id="monthlyExpense">₹0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">This Year</div>
+                        <div class="stat-value" id="yearlyExpense">₹0</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">All Expenses</h2>
+                        <button class="btn btn-primary" onclick="showExpenseModal()">+ Add Expense</button>
+                    </div>
+                    <div id="expenseList"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Task Modal -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Create New Task</h2>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label class="form-label">Task Name</label>
+                    <input type="text" class="form-input" id="taskName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assigned To</label>
+                    <select class="form-select" id="taskAssignee" required>
+                        <option value="admin">RkReddy (Admin)</option>
+                        <option value="jeb">Jeb</option>
+                        <option value="varthika">Varthika</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-select" id="taskPriority" required>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="taskStatus" required>
+                        <option value="todo">To Do</option>
+                        <option value="progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Deadline</label>
+                    <input type="date" class="form-input" id="taskDeadline">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-textarea" id="taskNotes"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeTaskModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div class="modal-overlay" id="expenseModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Expense</h2>
+            </div>
+            <form id="expenseForm">
+                <div class="form-group">
+                    <label class="form-label">Amount (₹)</label>
+                    <input type="number" class="form-input" id="expenseAmount" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="text" class="form-input" id="expenseCategory" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="expenseDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-input" id="expenseDate" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeExpenseModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle" id="mobileToggle" onclick="toggleMobileSidebar()">☰</button>
+
+    <script>
+        // App State
+        let currentUser = null;
+        let tasks = [];
+        let expenses = [];
+        let currentMonth = new Date();
+        
+        // YouTube API Configuration
+        const YOUTUBE_API_KEY = 'AIzaSyBEX7K7dZ2NhBQFk8jySKZuhzZVZO5u5_o';
+        const YOUTUBE_CHANNEL_ID = 'UCurtk6gwUZPnccBndhFPNMQ';
+        
+        // User passwords (stored in-memory - in production, use proper backend authentication)
+        const userPasswords = {
+            admin: "RK2025",
+            jeb: "jeb123",
+            varthika: "varthika123"
+        };
+        
+        // YouTube API Functions
+        async function fetchYouTubeSubscribers() {
+            try {
+                // Method 1: Use Axios CORS proxy (most reliable)
+                const response = await fetch(`https://axios-cors.vercel.app/?url=https://www.youtube.com/channel/${YOUTUBE_CHANNEL_ID}/about`);
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    
+                    // Extract subscriber count from the page
+                    const subMatch = html.match(/"subscriberCountText":\{"accessibility":\{"accessibilityData":\{"label":"([\d.]+[KMB]?) subscriber/i) ||
+                                   html.match(/"subscriberCountText":\{"simpleText":"([\d.]+[KMB]?)\s*subscriber/i);
+                    
+                    if (subMatch) {
+                        let countStr = subMatch[1];
+                        let count;
+                        
+                        // Convert K, M, B notation to numbers
+                        if (countStr.includes('K')) {
+                            count = Math.round(parseFloat(countStr.replace('K', '')) * 1000);
+                        } else if (countStr.includes('M')) {
+                            count = Math.round(parseFloat(countStr.replace('M', '')) * 1000000);
+                        } else if (countStr.includes('B')) {
+                            count = Math.round(parseFloat(countStr.replace('B', '')) * 1000000000);
+                        } else {
+                            count = parseInt(countStr.replace(/,/g, ''));
+                        }
+                        
+                        console.log('✅ Live subscriber count fetched:', count.toLocaleString());
+                        
+                        const rkReddyChannel = platforms.find(p => p.name === 'YouTube - RkReddy');
+                        if (rkReddyChannel) {
+                            rkReddyChannel.current = count;
+                            rkReddyChannel.lastUpdated = new Date();
+                            
+                            localStorage.setItem('rkreddy_subs', count);
+                            localStorage.setItem('rkreddy_subs_updated', new Date().toISOString());
+                        }
+                        
+                        return count;
+                    }
+                }
+                
+                throw new Error('Could not parse subscriber count');
+            } catch (error) {
+                console.warn('Auto-fetch failed:', error.message);
+                console.log('💡 Please use manual update in Growth Tracker');
+                loadSavedSubscribers();
+                return null;
+            }
+        }
+
+        // Auto-update subscriber count every 5 minutes
+        function startYouTubeAutoUpdate() {
+            // Load saved data first
+            loadSavedSubscribers();
+            renderDashboard();
+            renderGrowth();
+            
+            // Try to fetch live data
+            fetchYouTubeSubscribers().then((count) => {
+                if (count) {
+                    renderDashboard();
+                    renderGrowth();
+                    console.log('🔴 LIVE: Auto-update working! Refreshing every 5 minutes.');
+                    
+                    // Set up auto-refresh
+                    setInterval(async () => {
+                        const newCount = await fetchYouTubeSubscribers();
+                        if (newCount) {
+                            renderDashboard();
+                            renderGrowth();
+                            console.log('🔄 Auto-refreshed:', newCount.toLocaleString());
+                        }
+                    }, 5 * 60 * 1000);
+                } else {
+                    console.log('📝 Auto-update unavailable. Use manual update button.');
+                }
+            });
+        }
+        
+        // Manual update function (FIXED)
+        window.updateSubsCount = function() {
+            const input = document.getElementById('subsCountInput');
+            const count = parseInt(input.value);
+            
+            if (!count || count < 0) {
+                alert('❌ Please enter a valid subscriber count');
+                return;
+            }
+            
+            const rkReddyChannel = platforms.find(p => p.name === 'YouTube - RkReddy');
+            if (rkReddyChannel) {
+                rkReddyChannel.current = count;
+                rkReddyChannel.lastUpdated = new Date();
+                
+                // Save to localStorage
+                localStorage.setItem('rkreddy_subs', count);
+                localStorage.setItem('rkreddy_subs_updated', new Date().toISOString());
+                
+                renderDashboard();
+                renderGrowth();
+                
+                input.value = '';
+                alert(`✅ Subscriber count updated to: ${count.toLocaleString()}\n\nThis count will be saved and shown across the app.`);
+                
+                console.log('✅ Manual update successful:', count.toLocaleString());
+            }
+        }
+        
+        // Load saved subscriber count
+        function loadSavedSubscribers() {
+            const savedCount = localStorage.getItem('rkreddy_subs');
+            const savedTime = localStorage.getItem('rkreddy_subs_updated');
+            
+            if (savedCount) {
+                const rkReddyChannel = platforms.find(p => p.name === 'YouTube - RkReddy');
+                if (rkReddyChannel) {
+                    rkReddyChannel.current = parseInt(savedCount);
+                    if (savedTime) {
+                        rkReddyChannel.lastUpdated = new Date(savedTime);
+                    }
+                    console.log(`💾 Loaded saved subscriber count: ${parseInt(savedCount).toLocaleString()}`);
+                }
+            }
+        }
+
+        // Platform data
+        const platforms = [
+            {
+                name: 'YouTube - RkReddy',
+                icon: '🎬',
+                current: 250000, // Update this with actual current count
+                goal: 3000000,
+                deadline: '2026-12-31',
+                url: 'https://studio.youtube.com/channel/UCurtk6gwUZPnccBndhFPNMQ/analytics/tab-overview/period-default/explore?entity_type=CHANNEL&entity_id=UCurtk6gwUZPnccBndhFPNMQ&time_period=4_weeks&explore_type=SUBSCRIBERS'
+            },
+            {
+                name: 'YouTube - RkReddy 2.0',
+                icon: '📺',
+                current: 85000,
+                goal: 150000,
+                color: '#FF0000'
+            },
+            {
+                name: 'YouTube - Life Of RkReddy',
+                icon: '🎥',
+                current: 42000,
+                goal: 100000,
+                color: '#FF0000'
+            },
+            {
+                name: 'Instagram',
+                icon: '📸',
+                current: 180000,
+                goal: 300000,
+                color: '#E4405F'
+            },
+            {
+                name: 'TikTok',
+                icon: '🎵',
+                current: 95000,
+                goal: 200000,
+                color: '#000000'
+            },
+            {
+                name: 'Twitter (X)',
+                icon: '𝕏',
+                current: 28000,
+                goal: 50000,
+                color: '#1DA1F2'
+            },
+            {
+                name: 'Facebook',
+                icon: '👥',
+                current: 125000,
+                goal: 200000,
+                color: '#1877F2'
+            }
+        ];
+
+        // Sample tasks
+        const sampleTasks = [
+            { id: 1, name: 'Edit Q1 recap video', assignee: 'jeb', priority: 'high', status: 'progress', deadline: '2025-01-05', notes: 'Focus on storytelling' },
+            { id: 2, name: 'Upload shorts to YouTube', assignee: 'jeb', priority: 'medium', status: 'todo', deadline: '2025-01-03', notes: '' },
+            { id: 3, name: 'Add descriptions to latest 5 videos', assignee: 'varthika', priority: 'high', status: 'todo', deadline: '2025-01-04', notes: 'Include keywords' },
+            { id: 4, name: 'Create ad creatives for campaign', assignee: 'varthika', priority: 'medium', status: 'progress', deadline: '2025-01-06', notes: '' }
+        ];
+
+        // Initialize
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('userSelect').value;
+            
+            if (!user) {
+                return;
+            }
+            
+            login(user);
+        });
+
+        function login(user) {
+            currentUser = user;
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'flex';
+            
+            const userNames = {
+                'admin': 'RkReddy',
+                'jeb': 'Jeb',
+                'varthika': 'Varthika'
+            };
+            
+            const userRoles = {
+                'admin': 'Admin',
+                'jeb': 'Editor',
+                'varthika': 'Publisher'
+            };
+            
+            document.getElementById('currentUser').textContent = userNames[user];
+            document.getElementById('userBadge').textContent = userRoles[user];
+            
+            // Show/hide admin sections
+            const adminElements = document.querySelectorAll('.admin-only');
+            adminElements.forEach(el => {
+                el.style.display = user === 'admin' ? 'flex' : 'none';
+            });
+            
+            // Show calendar legend for admin
+            const calendarLegend = document.getElementById('calendarLegend');
+            if (calendarLegend) {
+                calendarLegend.style.display = user === 'admin' ? 'block' : 'none';
+            }
+            
+            // Load sample data
+            tasks = sampleTasks;
+            
+            // Render everything
+            renderDashboard();
+            renderTasks();
+            renderBoard();
+            renderCalendar();
+            renderGrowth();
+            renderExpenses();
+            renderSettings();
+            
+            // Start YouTube subscriber auto-update
+            startYouTubeAutoUpdate();
+        }
+
+        // Navigation
+        function goToDashboard() {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector('.nav-item[data-page="dashboard"]').classList.add('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('dashboard').classList.add('active');
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const page = this.dataset.page;
+                
+                // Update active nav
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show page
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(page).classList.add('active');
+                
+                // Close mobile sidebar after selecting a tab
+                closeMobileSidebar();
+            });
+        });
+
+        // Dashboard
+        function renderDashboard() {
+            const userTasks = tasks.filter(t => currentUser === 'admin' || t.assignee === currentUser);
+            
+            document.getElementById('dashPendingTasks').textContent = userTasks.filter(t => t.status === 'todo').length;
+            document.getElementById('dashInProgress').textContent = userTasks.filter(t => t.status === 'progress').length;
+            document.getElementById('dashCompleted').textContent = userTasks.filter(t => t.status === 'done').length;
+            document.getElementById('dashUploads').textContent = '3';
+            
+            const taskList = document.getElementById('dashboardTaskList');
+            taskList.innerHTML = '';
+            
+            userTasks.slice(0, 5).forEach(task => {
+                taskList.appendChild(createTaskElement(task));
+            });
+            
+            // Render growth progress cards on dashboard
+            const growthGrid = document.getElementById('dashboardGrowthGrid');
+            growthGrid.innerHTML = '';
+            
+            // Show first 4 platforms on dashboard
+            platforms.slice(0, 4).forEach(platform => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                
+                const percentage = Math.round((platform.current / platform.goal) * 100);
+                
+                // Get short platform name
+                const shortName = platform.name.split(' - ')[0] || platform.name;
+                
+                card.innerHTML = `
+                    <div class="stat-label">${platform.icon} ${shortName}</div>
+                    <div class="stat-value">${percentage}%</div>
+                    <div class="stat-change">${formatNumber(platform.current)} / ${formatNumber(platform.goal)}</div>
+                `;
+                
+                growthGrid.appendChild(card);
+            });
+        }
+
+        // Tasks
+        function renderTasks() {
+            const userTasks = tasks.filter(t => currentUser === 'admin' || t.assignee === currentUser);
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            
+            userTasks.forEach(task => {
+                taskList.appendChild(createTaskElement(task));
+            });
+        }
+
+        function createTaskElement(task) {
+            const div = document.createElement('div');
+            div.className = 'task-item';
+            div.dataset.taskId = task.id;
+            
+            // Swipe functionality for delete
+            let startX = 0;
+            let startY = 0;
+            let currentX = 0;
+            let currentY = 0;
+            let isSwiping = false;
+            
+            // Touch events for swipe-to-delete
+            div.addEventListener('touchstart', function(e) {
+                if (e.target.closest('.task-checkbox')) return;
+                
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                currentX = startX;
+                currentY = startY;
+                isSwiping = false;
+            }, { passive: true });
+            
+            div.addEventListener('touchmove', function(e) {
+                if (e.target.closest('.task-checkbox')) return;
+                
+                currentX = e.touches[0].clientX;
+                currentY = e.touches[0].clientY;
+                const diffX = startX - currentX;
+                const diffY = Math.abs(startY - currentY);
+                
+                // Only register as swipe if horizontal movement is greater than vertical
+                if (Math.abs(diffX) > 10 && Math.abs(diffX) > diffY) {
+                    e.preventDefault(); // Prevent scrolling while swiping
+                    isSwiping = true;
+                    
+                    // Swipe left to delete (iOS style)
+                    if (diffX > 0) {
+                        div.style.transform = `translateX(-${diffX}px)`;
+                        
+                        // Visual feedback when swiping
+                        if (diffX > 50) {
+                            div.classList.add('swiping-left');
+                        } else {
+                            div.classList.remove('swiping-left');
+                        }
+                    }
+                }
+            }, { passive: false });
+            
+            div.addEventListener('touchend', function(e) {
+                const diffX = startX - currentX;
+                
+                console.log('Swipe distance:', diffX); // Debug log
+                
+                // If swiped left more than 80px, delete the task
+                if (diffX > 80 && isSwiping) {
+                    div.classList.add('deleting');
+                    
+                    // Wait for animation then delete
+                    setTimeout(() => {
+                        console.log('Deleting task:', task.id); // Debug log
+                        deleteTask(task.id);
+                    }, 300);
+                } else {
+                    // Snap back if not swiped enough
+                    div.style.transform = '';
+                    div.classList.remove('swiping-left');
+                }
+                
+                isSwiping = false;
+            }, { passive: true });
+            
+            // Double-click to delete on desktop (for testing and convenience)
+            let clickCount = 0;
+            let clickTimer;
+            div.addEventListener('click', function(e) {
+                if (e.target.closest('.task-checkbox')) return;
+                
+                clickCount++;
+                if (clickCount === 1) {
+                    clickTimer = setTimeout(() => {
+                        clickCount = 0;
+                    }, 400);
+                } else if (clickCount === 2) {
+                    clearTimeout(clickTimer);
+                    clickCount = 0;
+                    
+                    // Double-click detected - delete task
+                    if (confirm('Delete this task?')) {
+                        deleteTask(task.id);
+                    }
+                }
+            });
+            
+            // Right-click to delete on desktop
+            div.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                if (confirm('Delete this task?')) {
+                    deleteTask(task.id);
+                }
+            });
+            
+            const checkbox = document.createElement('div');
+            checkbox.className = `task-checkbox ${task.status === 'done' ? 'checked' : ''}`;
+            checkbox.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleTask(task.id);
+            });
+            
+            const details = document.createElement('div');
+            details.className = 'task-details';
+            
+            const name = document.createElement('div');
+            name.className = 'task-name';
+            name.textContent = task.name;
+            
+            const meta = document.createElement('div');
+            meta.className = 'task-meta';
+            
+            const priority = document.createElement('span');
+            priority.className = `task-priority priority-${task.priority}`;
+            priority.textContent = task.priority.toUpperCase();
+            
+            const assignee = document.createElement('span');
+            assignee.textContent = task.assignee === 'admin' ? 'RkReddy' : task.assignee.charAt(0).toUpperCase() + task.assignee.slice(1);
+            
+            const deadline = document.createElement('span');
+            if (task.deadline) {
+                deadline.textContent = new Date(task.deadline).toLocaleDateString();
+            }
+            
+            meta.appendChild(priority);
+            meta.appendChild(assignee);
+            if (task.deadline) meta.appendChild(deadline);
+            
+            details.appendChild(name);
+            details.appendChild(meta);
+            
+            // Desktop hover delete button
+            const hoverDeleteBtn = document.createElement('button');
+            hoverDeleteBtn.className = 'task-delete-hover-btn';
+            hoverDeleteBtn.textContent = 'Delete';
+            hoverDeleteBtn.type = 'button';
+            
+            // Use mousedown instead of click to ensure it fires
+            hoverDeleteBtn.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            
+            hoverDeleteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Delete button clicked for task:', task.id);
+                
+                // Direct delete without confirmation for faster workflow
+                deleteTask(task.id);
+            });
+            
+            div.appendChild(checkbox);
+            div.appendChild(details);
+            div.appendChild(hoverDeleteBtn);
+            
+            return div;
+        }
+
+        function deleteTask(id) {
+            console.log('deleteTask called with id:', id); // Debug log
+            console.log('Tasks before:', tasks.length); // Debug log
+            tasks = tasks.filter(t => t.id !== id);
+            console.log('Tasks after:', tasks.length); // Debug log
+            renderDashboard();
+            renderTasks();
+            renderBoard();
+            renderCalendar();
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.status = task.status === 'done' ? 'todo' : 'done';
+                renderDashboard();
+                renderTasks();
+            }
+        }
+
+        // Task Modal
+        function showTaskModal() {
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function showTaskModalWithDate(date) {
+            document.getElementById('taskModal').classList.add('active');
+            // Pre-fill the deadline with the selected date
+            const dateStr = date.toISOString().split('T')[0];
+            document.getElementById('taskDeadline').value = dateStr;
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.remove('active');
+            document.getElementById('taskForm').reset();
+        }
+
+        document.getElementById('taskForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newTask = {
+                id: tasks.length + 1,
+                name: document.getElementById('taskName').value,
+                assignee: document.getElementById('taskAssignee').value,
+                priority: document.getElementById('taskPriority').value,
+                status: document.getElementById('taskStatus').value,
+                deadline: document.getElementById('taskDeadline').value,
+                notes: document.getElementById('taskNotes').value
+            };
+            
+            tasks.push(newTask);
+            closeTaskModal();
+            renderDashboard();
+            renderTasks();
+            renderBoard();
+            renderCalendar();
+        });
+
+        // Board
+        function renderBoard() {
+            const statusMap = {
+                'idea': 'idea',
+                'editing': 'editing',
+                'uploading': 'uploading',
+                'dubbing': 'dubbing',
+                'metadata': 'metadata',
+                'live': 'live'
+            };
+            
+            // Clear all columns
+            Object.keys(statusMap).forEach(status => {
+                const container = document.getElementById(`cards-${status}`);
+                container.innerHTML = '';
+            });
+            
+            // Populate columns
+            const userTasks = tasks.filter(t => currentUser === 'admin' || t.assignee === currentUser);
+            
+            userTasks.forEach(task => {
+                const card = createBoardCard(task);
+                const status = task.boardStatus || 'idea';
+                const container = document.getElementById(`cards-${status}`);
+                if (container) {
+                    container.appendChild(card);
+                }
+            });
+            
+            // Update counts
+            Object.keys(statusMap).forEach(status => {
+                const container = document.getElementById(`cards-${status}`);
+                const count = container.children.length;
+                const column = container.closest('.board-column');
+                const countEl = column.querySelector('.column-count');
+                countEl.textContent = count;
+            });
+        }
+
+        function createBoardCard(task) {
+            const div = document.createElement('div');
+            div.className = 'board-card';
+            div.draggable = true;
+            div.dataset.taskId = task.id;
+            
+            const name = document.createElement('div');
+            name.style.fontWeight = '600';
+            name.style.marginBottom = '8px';
+            name.textContent = task.name;
+            
+            const meta = document.createElement('div');
+            meta.style.fontSize = '12px';
+            meta.style.color = 'var(--text-muted)';
+            meta.textContent = task.assignee === 'admin' ? 'RkReddy' : task.assignee.charAt(0).toUpperCase() + task.assignee.slice(1);
+            
+            div.appendChild(name);
+            div.appendChild(meta);
+            
+            // Drag events
+            div.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('taskId', task.id);
+                this.classList.add('dragging');
+            });
+            
+            div.addEventListener('dragend', function() {
+                this.classList.remove('dragging');
+            });
+            
+            return div;
+        }
+
+        // Enable drop zones
+        document.querySelectorAll('.board-cards').forEach(zone => {
+            zone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+            
+            zone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                const taskId = parseInt(e.dataTransfer.getData('taskId'));
+                const task = tasks.find(t => t.id === taskId);
+                const newStatus = this.id.replace('cards-', '');
+                
+                if (task) {
+                    task.boardStatus = newStatus;
+                    renderBoard();
+                }
+            });
+        });
+
+        // Calendar
+        function renderCalendar() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            
+            document.getElementById('calendarMonth').textContent = 
+                new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            // Headers
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            days.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // Days
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Empty cells
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                grid.appendChild(empty);
+            }
+            
+            // Date cells
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day';
+                
+                const isToday = day === today.getDate() && 
+                               month === today.getMonth() && 
+                               year === today.getFullYear();
+                
+                if (isToday) {
+                    cell.classList.add('today');
+                }
+                
+                // Make day clickable to create task with pre-filled date
+                const selectedDate = new Date(year, month, day);
+                cell.onclick = () => showTaskModalWithDate(selectedDate);
+                
+                const number = document.createElement('div');
+                number.className = 'calendar-day-number';
+                number.textContent = day;
+                
+                cell.appendChild(number);
+                
+                // Check if any tasks have this deadline
+                // Admin sees all tasks, employees see only their own
+                const dateStr = selectedDate.toISOString().split('T')[0];
+                const tasksOnDate = currentUser === 'admin' 
+                    ? tasks.filter(t => t.deadline === dateStr)
+                    : tasks.filter(t => t.deadline === dateStr && t.assignee === currentUser);
+                
+                if (tasksOnDate.length > 0) {
+                    // Create dots container
+                    const dotsContainer = document.createElement('div');
+                    dotsContainer.style.position = 'absolute';
+                    dotsContainer.style.bottom = '8px';
+                    dotsContainer.style.left = '50%';
+                    dotsContainer.style.transform = 'translateX(-50%)';
+                    dotsContainer.style.display = 'flex';
+                    dotsContainer.style.gap = '3px';
+                    dotsContainer.style.alignItems = 'center';
+                    
+                    // For admin, show multiple dots for different users
+                    if (currentUser === 'admin' && tasksOnDate.length > 1) {
+                        tasksOnDate.slice(0, 3).forEach((task, index) => {
+                            const dot = document.createElement('div');
+                            dot.className = 'calendar-event-dot';
+                            
+                            // Color code by assignee
+                            if (task.assignee === 'admin') {
+                                dot.style.background = 'var(--accent-primary)';
+                            } else if (task.assignee === 'jeb') {
+                                dot.style.background = 'var(--accent-purple)';
+                            } else if (task.assignee === 'varthika') {
+                                dot.style.background = 'var(--success)';
+                            }
+                            
+                            dotsContainer.appendChild(dot);
+                        });
+                        
+                        // Add count if more than 3 tasks
+                        if (tasksOnDate.length > 3) {
+                            const count = document.createElement('span');
+                            count.style.fontSize = '9px';
+                            count.style.color = 'var(--text-secondary)';
+                            count.style.fontWeight = '600';
+                            count.textContent = `+${tasksOnDate.length - 3}`;
+                            dotsContainer.appendChild(count);
+                        }
+                    } else {
+                        // Single dot for employees or admin with single task
+                        const dot = document.createElement('div');
+                        dot.className = 'calendar-event-dot';
+                        
+                        // Color code by assignee
+                        const task = tasksOnDate[0];
+                        if (task.assignee === 'admin') {
+                            dot.style.background = 'var(--accent-primary)';
+                        } else if (task.assignee === 'jeb') {
+                            dot.style.background = 'var(--accent-purple)';
+                        } else if (task.assignee === 'varthika') {
+                            dot.style.background = 'var(--success)';
+                        }
+                        
+                        dotsContainer.appendChild(dot);
+                    }
+                    
+                    cell.appendChild(dotsContainer);
+                }
+                
+                grid.appendChild(cell);
+            }
+        }
+
+        function previousMonth() {
+            currentMonth.setMonth(currentMonth.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth.setMonth(currentMonth.getMonth() + 1);
+            renderCalendar();
+        }
+
+        // Growth
+        function renderGrowth() {
+            const grid = document.getElementById('platformGrid');
+            grid.innerHTML = '';
+            
+            platforms.forEach(platform => {
+                const card = document.createElement('div');
+                card.className = 'platform-card';
+                
+                // Make card clickable if URL exists
+                if (platform.url) {
+                    card.style.cursor = 'pointer';
+                    card.onclick = () => window.open(platform.url, '_blank');
+                }
+                
+                const header = document.createElement('div');
+                header.className = 'platform-header';
+                
+                const icon = document.createElement('div');
+                icon.className = 'platform-icon';
+                icon.style.background = 'var(--bg-tertiary)';
+                icon.textContent = platform.icon;
+                
+                const name = document.createElement('div');
+                name.className = 'platform-name';
+                name.textContent = platform.name;
+                
+                header.appendChild(icon);
+                header.appendChild(name);
+                
+                const stats = document.createElement('div');
+                stats.className = 'platform-stats';
+                
+                const current = document.createElement('div');
+                current.className = 'platform-stat';
+                current.innerHTML = `
+                    <div class="platform-stat-label">Current</div>
+                    <div class="platform-stat-value">${formatNumber(platform.current)}</div>
+                `;
+                
+                const goal = document.createElement('div');
+                goal.className = 'platform-stat';
+                goal.innerHTML = `
+                    <div class="platform-stat-label">Goal</div>
+                    <div class="platform-stat-value">${formatNumber(platform.goal)}</div>
+                `;
+                
+                stats.appendChild(current);
+                stats.appendChild(goal);
+                
+                const progress = document.createElement('div');
+                progress.className = 'progress-container';
+                
+                const percentage = Math.round((platform.current / platform.goal) * 100);
+                
+                // Calculate days remaining if deadline exists
+                let timeRemaining = '';
+                if (platform.deadline) {
+                    const deadline = new Date(platform.deadline);
+                    const now = new Date();
+                    const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+                    timeRemaining = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">${daysLeft} days until ${deadline.toLocaleDateString()}</div>`;
+                }
+                
+                // Show last updated time for live data
+                let lastUpdated = '';
+                if (platform.lastUpdated) {
+                    const time = platform.lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    lastUpdated = `<div style="font-size: 10px; color: var(--success); margin-top: 4px;">🔴 Live • Updated ${time}</div>`;
+                }
+                
+                progress.innerHTML = `
+                    <div class="progress-header">
+                        <span class="progress-label">Progress</span>
+                        <span class="progress-value">${percentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    ${timeRemaining}
+                    ${lastUpdated}
+                `;
+                
+                card.appendChild(header);
+                card.appendChild(stats);
+                card.appendChild(progress);
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        // Settings
+        function renderSettings() {
+            const userNames = {
+                'admin': 'RkReddy',
+                'jeb': 'Jeb',
+                'varthika': 'Varthika'
+            };
+            
+            const userRoles = {
+                'admin': 'Administrator',
+                'jeb': 'Video Editor',
+                'varthika': 'Content Publisher'
+            };
+            
+            const userTypes = {
+                'admin': 'Full Access',
+                'jeb': 'Limited Access (Editing & Uploading)',
+                'varthika': 'Limited Access (Publishing & Metadata)'
+            };
+            
+            document.getElementById('settingsUserName').textContent = userNames[currentUser];
+            document.getElementById('settingsUserRole').textContent = userRoles[currentUser];
+            document.getElementById('settingsUserType').textContent = userTypes[currentUser];
+        }
+
+        // Change Password Form
+        document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const messageDiv = document.getElementById('passwordMessage');
+            
+            // Validate current password
+            if (currentPassword !== userPasswords[currentUser]) {
+                messageDiv.style.display = 'block';
+                messageDiv.style.background = 'rgba(239, 71, 111, 0.2)';
+                messageDiv.style.color = 'var(--error)';
+                messageDiv.textContent = '❌ Current password is incorrect';
+                return;
+            }
+            
+            // Validate new password match
+            if (newPassword !== confirmPassword) {
+                messageDiv.style.display = 'block';
+                messageDiv.style.background = 'rgba(239, 71, 111, 0.2)';
+                messageDiv.style.color = 'var(--error)';
+                messageDiv.textContent = '❌ New passwords do not match';
+                return;
+            }
+            
+            // Validate new password length
+            if (newPassword.length < 4) {
+                messageDiv.style.display = 'block';
+                messageDiv.style.background = 'rgba(239, 71, 111, 0.2)';
+                messageDiv.style.color = 'var(--error)';
+                messageDiv.textContent = '❌ Password must be at least 4 characters';
+                return;
+            }
+            
+            // Update password
+            userPasswords[currentUser] = newPassword;
+            
+            // Show success message
+            messageDiv.style.display = 'block';
+            messageDiv.style.background = 'rgba(6, 214, 160, 0.2)';
+            messageDiv.style.color = 'var(--success)';
+            messageDiv.textContent = '✅ Password updated successfully!';
+            
+            // Reset form
+            document.getElementById('changePasswordForm').reset();
+            
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        });
+
+        // Expenses
+        function renderExpenses() {
+            if (currentUser !== 'admin') return;
+            
+            const monthly = expenses
+                .filter(e => new Date(e.date).getMonth() === new Date().getMonth())
+                .reduce((sum, e) => sum + e.amount, 0);
+            
+            const yearly = expenses
+                .filter(e => new Date(e.date).getFullYear() === new Date().getFullYear())
+                .reduce((sum, e) => sum + e.amount, 0);
+            
+            document.getElementById('monthlyExpense').textContent = '₹' + monthly.toLocaleString();
+            document.getElementById('yearlyExpense').textContent = '₹' + yearly.toLocaleString();
+            
+            const list = document.getElementById('expenseList');
+            list.innerHTML = '';
+            
+            expenses.forEach(expense => {
+                const div = document.createElement('div');
+                div.className = 'task-item';
+                div.innerHTML = `
+                    <div class="task-details">
+                        <div class="task-name">₹${expense.amount.toLocaleString()} - ${expense.category}</div>
+                        <div class="task-meta">
+                            <span>${new Date(expense.date).toLocaleDateString()}</span>
+                            <span>${expense.description}</span>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function showExpenseModal() {
+            document.getElementById('expenseModal').classList.add('active');
+        }
+
+        function closeExpenseModal() {
+            document.getElementById('expenseModal').classList.remove('active');
+            document.getElementById('expenseForm').reset();
+        }
+
+        document.getElementById('expenseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newExpense = {
+                id: expenses.length + 1,
+                amount: parseFloat(document.getElementById('expenseAmount').value),
+                category: document.getElementById('expenseCategory').value,
+                description: document.getElementById('expenseDescription').value,
+                date: document.getElementById('expenseDate').value
+            };
+            
+            expenses.push(newExpense);
+            closeExpenseModal();
+            renderExpenses();
+        });
+
+        // Mobile
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-visible');
+        }
+        
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.remove('mobile-visible');
+        }
+        
+        // Close sidebar when clicking outside of it
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const mobileToggle = document.getElementById('mobileToggle');
+            
+            // Check if sidebar is open and click is outside sidebar and toggle button
+            if (sidebar.classList.contains('mobile-visible') && 
+                !sidebar.contains(e.target) && 
+                e.target !== mobileToggle) {
+                closeMobileSidebar();
+            }
+        });
+
+        // Close modal on outside click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
