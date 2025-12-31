@@ -43,6 +43,12 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         body {
@@ -50,21 +56,19 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             overflow-x: hidden;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: pan-y;
         }
         
-        /* Allow text selection only in input fields */
-        input, textarea {
+        /* Allow text selection and interaction only in input fields */
+        input, textarea, select {
             -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
             user-select: text;
         }
         
-        /* Prevent double-tap zoom on iOS */
-        * {
-            touch-action: manipulation;
+        /* Ensure buttons are clickable */
+        button {
+            cursor: pointer;
         }
 
         .app-container {
@@ -192,8 +196,8 @@
         }
 
         .back-button {
-            position: absolute;
-            top: 0;
+            position: sticky;
+            top: 16px;
             left: 0;
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
@@ -207,6 +211,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            z-index: 50;
+            width: fit-content;
+            margin-bottom: 16px;
         }
 
         .back-button:hover {
@@ -224,15 +231,23 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            padding-left: 100px;
+            padding-left: 0;
             -webkit-user-select: none;
             user-select: none;
+            pointer-events: none;
         }
 
         .page-subtitle {
             color: var(--text-secondary);
             font-size: 14px;
-            padding-left: 100px;
+            padding-left: 0;
+            -webkit-user-select: none;
+            user-select: none;
+            pointer-events: none;
+        }
+        
+        .logo, .user-info, .nav-item, .stat-label, .stat-value, .stat-change,
+        .task-name, .task-meta, .card-title {
             -webkit-user-select: none;
             user-select: none;
         }
@@ -852,7 +867,7 @@
 
             .main-content {
                 margin-left: 0;
-                padding: 20px;
+                padding: 16px;
             }
 
             .mobile-toggle {
@@ -862,7 +877,26 @@
             }
 
             .stats-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+            
+            .stat-card {
+                padding: 10px;
+                border-radius: 12px;
+            }
+            
+            .stat-label {
+                font-size: 7px;
+            }
+            
+            .stat-value {
+                font-size: 20px;
+            }
+            
+            .stat-change {
+                font-size: 7px;
             }
 
             .board-container {
@@ -876,13 +910,23 @@
             .page-title,
             .page-subtitle {
                 padding-left: 0;
-                margin-top: 40px;
+                margin-top: 0;
             }
 
             .back-button {
-                position: static;
+                position: sticky;
+                top: 16px;
                 margin-bottom: 16px;
                 width: fit-content;
+            }
+            
+            .page-header {
+                margin-bottom: 20px;
+            }
+            
+            .card {
+                margin-bottom: 16px;
+                padding: 16px;
             }
             
             /* Calendar mobile fixes */
@@ -989,6 +1033,66 @@
             font-size: 24px;
             font-weight: 700;
             color: var(--text-primary);
+        }
+        
+        /* Day View Timeline */
+        .timeline-container {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-hour {
+            display: flex;
+            align-items: flex-start;
+            min-height: 60px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+        
+        .timeline-hour-label {
+            width: 80px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        
+        .timeline-hour-tasks {
+            flex: 1;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .timeline-task {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--accent-primary);
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        
+        .timeline-task.jeb {
+            border-left-color: var(--accent-purple);
+        }
+        
+        .timeline-task.varthika {
+            border-left-color: var(--success);
+        }
+        
+        .timeline-task-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .timeline-task-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
     </style>
 </head>
@@ -1341,10 +1445,22 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Assigned To</label>
-                    <select class="form-select" id="taskAssignee" required>
+                    <select class="form-select" id="taskAssignee" required onchange="togglePlatformField()">
                         <option value="admin">RkReddy (Admin)</option>
                         <option value="jeb">Jeb</option>
                         <option value="varthika">Varthika</option>
+                    </select>
+                </div>
+                <div class="form-group" id="platformGroup" style="display: none;">
+                    <label class="form-label">Platform</label>
+                    <select class="form-select" id="taskPlatform">
+                        <option value="">Select platform...</option>
+                        <option value="rkreddy-yt">RkReddy YT</option>
+                        <option value="2.0-yt">2.0 YT</option>
+                        <option value="life-of-rk-yt">Life of Rk YT</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="tiktok">TikTok</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1407,6 +1523,22 @@
                     <button type="submit" class="btn btn-primary">Add Expense</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Day View Modal -->
+    <div class="modal-overlay" id="dayViewModal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="dayViewTitle">Day Schedule</h2>
+            </div>
+            <div id="dayViewContent" style="max-height: 70vh; overflow-y: auto;">
+                <!-- 24-hour timeline will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDayView()">Close</button>
+                <button type="button" class="btn btn-primary" onclick="showTaskModal()">+ Add Task</button>
+            </div>
         </div>
     </div>
 
@@ -1883,6 +2015,30 @@
             const assignee = document.createElement('span');
             assignee.textContent = task.assignee === 'admin' ? 'RkReddy' : task.assignee.charAt(0).toUpperCase() + task.assignee.slice(1);
             
+            // Add platform badge if exists
+            if (task.platform) {
+                const platformBadge = document.createElement('span');
+                platformBadge.style.marginLeft = '8px';
+                platformBadge.style.padding = '2px 6px';
+                platformBadge.style.borderRadius = '4px';
+                platformBadge.style.fontSize = '10px';
+                platformBadge.style.fontWeight = '600';
+                platformBadge.style.background = 'rgba(157, 78, 221, 0.2)';
+                platformBadge.style.color = 'var(--accent-purple)';
+                
+                const platformNames = {
+                    'rkreddy-yt': 'RkReddy YT',
+                    '2.0-yt': '2.0 YT',
+                    'life-of-rk-yt': 'Life of Rk',
+                    'instagram': 'IG',
+                    'facebook': 'FB',
+                    'tiktok': 'TikTok'
+                };
+                
+                platformBadge.textContent = platformNames[task.platform] || task.platform;
+                assignee.appendChild(platformBadge);
+            }
+            
             const deadline = document.createElement('span');
             if (task.deadline) {
                 const deadlineDate = new Date(task.deadline);
@@ -1954,6 +2110,7 @@
         // Task Modal
         function showTaskModal() {
             document.getElementById('taskModal').classList.add('active');
+            togglePlatformField(); // Check initial state
         }
 
         function showTaskModalWithDate(date) {
@@ -1961,11 +2118,26 @@
             // Pre-fill the deadline with the selected date
             const dateStr = date.toISOString().split('T')[0];
             document.getElementById('taskDeadline').value = dateStr;
+            togglePlatformField(); // Check initial state
         }
 
         function closeTaskModal() {
             document.getElementById('taskModal').classList.remove('active');
             document.getElementById('taskForm').reset();
+            document.getElementById('platformGroup').style.display = 'none';
+        }
+        
+        function togglePlatformField() {
+            const assignee = document.getElementById('taskAssignee').value;
+            const platformGroup = document.getElementById('platformGroup');
+            
+            // Show platform field only for Jeb
+            if (assignee === 'jeb') {
+                platformGroup.style.display = 'block';
+            } else {
+                platformGroup.style.display = 'none';
+                document.getElementById('taskPlatform').value = ''; // Clear selection
+            }
         }
 
         document.getElementById('taskForm').addEventListener('submit', function(e) {
@@ -1975,6 +2147,7 @@
                 id: tasks.length + 1,
                 name: document.getElementById('taskName').value,
                 assignee: document.getElementById('taskAssignee').value,
+                platform: document.getElementById('taskPlatform').value,
                 priority: document.getElementById('taskPriority').value,
                 status: document.getElementById('taskStatus').value,
                 deadline: document.getElementById('taskDeadline').value,
@@ -2123,9 +2296,9 @@
                     cell.classList.add('today');
                 }
                 
-                // Make day clickable to create task with pre-filled date
+                // Make day clickable to open day view
                 const selectedDate = new Date(year, month, day);
-                cell.onclick = () => showTaskModalWithDate(selectedDate);
+                cell.onclick = () => openDayView(selectedDate);
                 
                 const number = document.createElement('div');
                 number.className = 'calendar-day-number';
@@ -2211,6 +2384,112 @@
         function nextMonth() {
             currentMonth.setMonth(currentMonth.getMonth() + 1);
             renderCalendar();
+        }
+        
+        // Day View Modal
+        function openDayView(date) {
+            const modal = document.getElementById('dayViewModal');
+            const title = document.getElementById('dayViewTitle');
+            const content = document.getElementById('dayViewContent');
+            
+            // Format date
+            const dateStr = date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            title.textContent = dateStr;
+            
+            // Get all tasks for this day (admin sees everyone's tasks)
+            const dateKey = date.toISOString().split('T')[0];
+            const dayTasks = tasks.filter(t => {
+                if (!t.deadline) return false;
+                const taskDate = new Date(t.deadline).toISOString().split('T')[0];
+                return taskDate === dateKey;
+            });
+            
+            // Sort tasks by time
+            dayTasks.sort((a, b) => {
+                const timeA = new Date(a.deadline).getTime();
+                const timeB = new Date(b.deadline).getTime();
+                return timeA - timeB;
+            });
+            
+            // Group tasks by hour
+            const tasksByHour = {};
+            dayTasks.forEach(task => {
+                const hour = new Date(task.deadline).getHours();
+                if (!tasksByHour[hour]) {
+                    tasksByHour[hour] = [];
+                }
+                tasksByHour[hour].push(task);
+            });
+            
+            // Build 24-hour timeline
+            let html = '<div class="timeline-container">';
+            
+            for (let hour = 0; hour < 24; hour++) {
+                const hourLabel = hour === 0 ? '12 AM' : 
+                                 hour < 12 ? `${hour} AM` : 
+                                 hour === 12 ? '12 PM' : 
+                                 `${hour - 12} PM`;
+                
+                html += `<div class="timeline-hour">`;
+                html += `<div class="timeline-hour-label">${hourLabel}</div>`;
+                html += `<div class="timeline-hour-tasks">`;
+                
+                if (tasksByHour[hour]) {
+                    tasksByHour[hour].forEach(task => {
+                        const time = new Date(task.deadline).toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                        });
+                        
+                        const assigneeClass = task.assignee === 'jeb' ? 'jeb' : 
+                                             task.assignee === 'varthika' ? 'varthika' : 'admin';
+                        
+                        const assigneeName = task.assignee === 'admin' ? 'RkReddy' : 
+                                            task.assignee.charAt(0).toUpperCase() + task.assignee.slice(1);
+                        
+                        const platform = task.platform ? ` • ${task.platform.toUpperCase()}` : '';
+                        const priority = `<span class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</span>`;
+                        
+                        html += `
+                            <div class="timeline-task ${assigneeClass}">
+                                <div class="timeline-task-name">${task.name}</div>
+                                <div class="timeline-task-meta">
+                                    <span>🕐 ${time}</span>
+                                    <span>👤 ${assigneeName}${platform}</span>
+                                    ${priority}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `</div></div>`;
+            }
+            
+            html += '</div>';
+            
+            if (dayTasks.length === 0) {
+                html = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">No tasks scheduled</div>
+                        <div style="font-size: 14px;">Click "+ Add Task" to create one</div>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = html;
+            modal.classList.add('active');
+        }
+        
+        function closeDayView() {
+            document.getElementById('dayViewModal').classList.remove('active');
         }
 
         // Growth
@@ -2533,6 +2812,68 @@
                     this.classList.remove('active');
                 }
             });
+        });
+        
+        // Prevent iOS zoom completely
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
+        });
+        
+        // Prevent double-tap zoom
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Swipe right to go back to dashboard (iOS-style back gesture)
+        let swipeStartX = 0;
+        let swipeStartY = 0;
+        let isSwipingBack = false;
+        
+        document.addEventListener('touchstart', function(e) {
+            swipeStartX = e.touches[0].clientX;
+            swipeStartY = e.touches[0].clientY;
+            isSwipingBack = false;
+        });
+        
+        document.addEventListener('touchmove', function(e) {
+            // Only trigger if starting from left edge (first 50px)
+            if (swipeStartX > 50) return;
+            
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const diffX = currentX - swipeStartX;
+            const diffY = Math.abs(currentY - swipeStartY);
+            
+            // Swipe right from left edge (and more horizontal than vertical)
+            if (diffX > 30 && diffX > diffY) {
+                isSwipingBack = true;
+            }
+        });
+        
+        document.addEventListener('touchend', function(e) {
+            if (isSwipingBack) {
+                const currentX = e.changedTouches[0].clientX;
+                const diffX = currentX - swipeStartX;
+                
+                // If swiped more than 100px right, go to dashboard
+                if (diffX > 100) {
+                    goToDashboard();
+                }
+            }
+            isSwipingBack = false;
         });
     </script>
 </body>
